@@ -3,6 +3,8 @@ from passlib.hash import pbkdf2_sha256
 from flaskapp import db
 import uuid
 
+from flaskapp.user.errors.dbDownError import dbDown
+
 class User:
 
   def start_session(self, user):
@@ -12,27 +14,36 @@ class User:
     return jsonify(user), 200
 
   def signup(self):
-    print(request.form)
 
-    # Create the user object
-    user = {
-      "_id": uuid.uuid4().hex,
-      "name": request.form.get('name'),
-      "email": request.form.get('email'),
-      "password": request.form.get('password')
-    }
+    try:
+        print(request.form)
 
-    # Encrypt the password
-    user['password'] = pbkdf2_sha256.encrypt(user['password'])
+        # Create the user object
+        user = {
+          "_id": uuid.uuid4().hex,
+          "name": request.form.get('name'),
+          "email": request.form.get('email'),
+          "password": request.form.get('password')
+        }
 
-    # Check for existing email address
-    if db.users.find_one({ "email": user['email'] }):
-      return jsonify({ "error": "Email address already in use" }), 400
+        # Encrypt the password
+        user['password'] = pbkdf2_sha256.encrypt(user['password'])
 
-    if db.users.insert_one(user):
-      return self.start_session(user)
+        # Check for existing email address
+        if db.users.find_one({ "email": user['email'] }):
+          return jsonify({ "error": "Email address already in use" }), 400
 
-    return jsonify({ "error": "Signup failed" }), 400
+        if db.users.insert_one(user):
+          return self.start_session(user)
+
+        return jsonify({ "error": "Signup failed" }), 400
+        
+    except:
+      print("error 500")
+      dbDown()
+    
+
+   
   
   def signout(self):
     session.clear()
