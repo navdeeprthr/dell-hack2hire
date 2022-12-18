@@ -1,6 +1,8 @@
 from flask import render_template
-from flaskapp import app, login_required
+from flaskapp import app,login_required,Flask
 from flaskapp.user.routes import *
+
+
 
 @app.route('/')
 def home():
@@ -10,6 +12,7 @@ def home():
 @login_required
 def dashboard():
   return render_template('dashboard.html')
+
 
 if __name__ == '__main__':
   app.run(debug=True)
